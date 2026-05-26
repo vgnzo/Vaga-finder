@@ -63,13 +63,17 @@ export default function App() {
         { headers: { "Accept-Language": "pt-BR" } }
       );
       const data = await res.json();
+      const toTitleCase = (str) => str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
       const cities = data
         .filter((r) => ["city", "town", "village", "municipality"].includes(r.addresstype) || r.type === "administrative")
         .map((r) => {
-          const city = r.address.city || r.address.town || r.address.village || r.name;
-          const state = r.address.state;
-          return `${city}, ${state}`;
+          const city = toTitleCase(r.address.city || r.address.town || r.address.village || r.name);
+          const state = toTitleCase(r.address.state || "");
+          const stateCode = r.address["ISO3166-2-lvl4"]?.split("-")[1] || state;
+          if (city.toLowerCase() === state.toLowerCase()) return null;
+          return `${city}, ${stateCode}`;
         })
+        .filter(Boolean)
         .filter((v, i, a) => a.indexOf(v) === i);
       setLocResults(cities.slice(0, 6));
     } catch (e) {
@@ -113,7 +117,7 @@ export default function App() {
       await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, localizacao: locSelected, stack: selectedStacks.join(", ") }),
+        body: JSON.stringify({ ...form, nome: nome.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()), localizacao: locSelected, stack: selectedStacks.join(", ") }),
       });
     } catch (e) {}
     setLoading(false);
