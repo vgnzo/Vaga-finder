@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { background: #0a0a0f; }
+
+.w {
+  font-family: 'DM Sans', sans-serif;
+  background: #0a0a0f;
+  min-height: 100vh;
+  padding: 3rem 1.5rem;
+  color: #e8e8f0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(99,91,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,91,255,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,91,255,0.1) 0%, transparent 70%);
+  top: -200px;
+  right: -200px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card {
+  max-width: 540px;
+  width: 100%;
+  background: rgba(15,15,25,0.9);
+  border: 1px solid rgba(99,91,255,0.15);
+  border-radius: 20px;
+  padding: 2.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(99,91,255,0.12);
+  border: 1px solid rgba(99,91,255,0.25);
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-size: 12px;
+  color: #9b94ff;
+  margin-bottom: 1.5rem;
+}
+
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  background: #635bff;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  display: inline-block;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+}
+
+h1 span { color: #635bff; }
+
+.desc {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(99,91,255,0.1);
+  margin-bottom: 2rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field.full { grid-column: 1 / -1; }
+
+.field label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #635bff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.field input,
+.field select,
+.field textarea {
+  background: transparent;
+  border: 1px solid rgba(99,91,255,0.2);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 13px;
+  color: #e0e0f0;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: rgba(99,91,255,0.6);
+}
+
+.field input::placeholder,
+.field textarea::placeholder { color: #7070a0; }
+
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  color: #7070a0;
+}
+
+.field select.has-value { color: #e0e0f0; }
+.field select option { background: #0f0f1a; color: #e0e0f0; }
+
+.field textarea {
+  resize: none;
+  height: 80px;
+  line-height: 1.6;
+}
+
+.btn {
+  width: 100%;
+  background: #635bff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  margin-top: 4px;
+}
+
+.btn:hover { background: #524aee; }
+.btn:active { transform: scale(0.99); }
+.btn:disabled { background: #1e1e30; color: #444; cursor: not-allowed; }
+
+.err {
+  font-size: 12px;
+  color: #f09595;
+  margin-top: 10px;
+}
+
+.footer {
+  text-align: center;
+  font-size: 11px;
+  color: #2a2a40;
+  margin-top: 1rem;
+}
+
+.success {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.success-icon {
+  width: 52px;
+  height: 52px;
+  background: rgba(99,91,255,0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 22px;
+  color: #635bff;
+}
+
+.success h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.25rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.success p { font-size: 13px; color: #555; }
+.success strong { color: #9b94ff; }
