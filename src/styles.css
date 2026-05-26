@@ -220,3 +220,84 @@ h1 span { color: #635bff; }
 
 .success p { font-size: 13px; color: #555; }
 .success strong { color: #9b94ff; }
+
+/* Stack selector */
+.stack-wrapper {
+  background: transparent;
+  border: 1px solid rgba(99,91,255,0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  position: relative;
+  transition: border-color 0.2s;
+}
+
+.stack-wrapper:focus-within {
+  border-color: rgba(99,91,255,0.6);
+}
+
+.stack-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.stack-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(99,91,255,0.15);
+  border: 1px solid rgba(99,91,255,0.3);
+  border-radius: 100px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: #9b94ff;
+}
+
+.stack-tag button {
+  background: none;
+  border: none;
+  color: #635bff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+}
+
+.stack-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  font-size: 13px;
+  color: #e0e0f0;
+  font-family: 'DM Sans', sans-serif;
+  width: 100%;
+}
+
+.stack-input::placeholder { color: #7070a0; }
+
+.stack-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #13131f;
+  border: 1px solid rgba(99,91,255,0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.stack-option {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #c8c8e0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.stack-option:hover {
+  background: rgba(99,91,255,0.1);
+  color: #fff;
+}
