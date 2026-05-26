@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import "./styles.css";
 
 const WEBHOOK_URL = "https://igcjr.app.n8n.cloud/webhook/e92117d7-05f2-4402-8808-7e261c25aca4";
@@ -22,6 +22,34 @@ const STACKS = [
   "Figma", "UI/UX", "Scrum", "Agile"
 ];
 
+const CIDADES = [
+  "São Paulo, SP", "Campinas, SP", "Santos, SP", "São Bernardo do Campo, SP",
+  "Santo André, SP", "Osasco, SP", "Ribeirão Preto, SP", "Sorocaba, SP",
+  "Mauá, SP", "São José dos Campos, SP", "Guarulhos, SP", "Mogi das Cruzes, SP",
+  "Rio de Janeiro, RJ", "Niterói, RJ", "Petrópolis, RJ", "Nova Iguaçu, RJ",
+  "Belo Horizonte, MG", "Uberlândia, MG", "Contagem, MG", "Juiz de Fora, MG",
+  "Curitiba, PR", "Londrina, PR", "Maringá, PR", "Ponta Grossa, PR",
+  "Porto Alegre, RS", "Caxias do Sul, RS", "Pelotas, RS", "Santa Maria, RS",
+  "Brasília, DF",
+  "Salvador, BA", "Feira de Santana, BA", "Vitória da Conquista, BA",
+  "Fortaleza, CE", "Caucaia, CE", "Juazeiro do Norte, CE",
+  "Manaus, AM", "Recife, PE", "Caruaru, PE", "Olinda, PE",
+  "Belém, PA", "Ananindeua, PA", "Santarém, PA",
+  "Goiânia, GO", "Aparecida de Goiânia, GO", "Anápolis, GO",
+  "São Luís, MA", "Imperatriz, MA",
+  "Maceió, AL", "Arapiraca, AL",
+  "Natal, RN", "Mossoró, RN",
+  "Teresina, PI", "Parnaíba, PI",
+  "João Pessoa, PB", "Campina Grande, PB",
+  "Aracaju, SE", "Feira Nova, SE",
+  "Macapá, AP", "Porto Velho, RO", "Rio Branco, AC",
+  "Boa Vista, RR", "Palmas, TO", "Cuiabá, MT", "Campo Grande, MS",
+  "Vitória, ES", "Vila Velha, ES", "Serra, ES", "Cariacica, ES",
+  "Florianópolis, SC", "Joinville, SC", "Blumenau, SC",
+  "Remoto"
+];
+
+
 export default function App() {
   const [form, setForm] = useState({ nome: "", email: "", nivel: "" });
   const [selectedStacks, setSelectedStacks] = useState([]);
@@ -29,10 +57,8 @@ export default function App() {
   const [showStackDropdown, setShowStackDropdown] = useState(false);
 
   const [locSearch, setLocSearch] = useState("");
-  const [locResults, setLocResults] = useState([]);
   const [locSelected, setLocSelected] = useState("");
   const [showLocDropdown, setShowLocDropdown] = useState(false);
-  const [locLoading, setLocLoading] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -54,41 +80,9 @@ export default function App() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const searchLocation = useCallback(async (query) => {
-    if (query.length < 2) { setLocResults([]); return; }
-    setLocLoading(true);
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=br&format=json&addressdetails=1&limit=6`,
-        { headers: { "Accept-Language": "pt-BR" } }
-      );
-      const data = await res.json();
-      const stateMap = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
-      const smallWords = ["de","da","do","das","dos","e"];
-      const toTitleCase = (str) => str.toLowerCase().split(" ").map((w,i) => i>0 && smallWords.includes(w) ? w : w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
-      const cities = data
-        .filter((r) => r.address && (r.address.city || r.address.town || r.address.village))
-        .map((r) => {
-          const city = toTitleCase(r.address.city || r.address.town || r.address.village || r.name);
-          const stateFull = r.address.state || "";
-          const stateCode = stateMap[stateFull] || r.address["ISO3166-2-lvl4"]?.split("-")[1] || stateFull;
-          if (!city || !stateCode) return null;
-          if (city.toLowerCase() === stateFull.toLowerCase()) return null;
-          return `${city}, ${stateCode}`;
-        })
-        .filter(Boolean)
-        .filter((v, i, a) => a.indexOf(v) === i);
-      setLocResults(cities.slice(0, 6));
-    } catch (e) {
-      setLocResults([]);
-    }
-    setLocLoading(false);
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => searchLocation(locSearch), 400);
-    return () => clearTimeout(timer);
-  }, [locSearch, searchLocation]);
+  const filteredCidades = locSearch.length > 0
+    ? CIDADES.filter((c) => c.toLowerCase().includes(locSearch.toLowerCase())).slice(0, 8)
+    : [];
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.id]: e.target.value });
@@ -170,15 +164,11 @@ export default function App() {
                     onChange={(e) => { setLocSearch(e.target.value); setLocSelected(""); setShowLocDropdown(true); }}
                     onFocus={() => setShowLocDropdown(true)}
                   />
-                  {showLocDropdown && (locLoading || locResults.length > 0) && (
+                  {showLocDropdown && filteredCidades.length > 0 && (
                     <div className="stack-dropdown">
-                      {locLoading ? (
-                        <div className="stack-option" style={{color:"#555"}}>Buscando...</div>
-                      ) : (
-                        locResults.map((loc) => (
-                          <div key={loc} className="stack-option" onClick={() => selectLocation(loc)}>{loc}</div>
-                        ))
-                      )}
+                      {filteredCidades.map((loc) => (
+                        <div key={loc} className="stack-option" onClick={() => selectLocation(loc)}>{loc}</div>
+                      ))}
                     </div>
                   )}
                 </div>
