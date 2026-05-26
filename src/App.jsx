@@ -79,6 +79,9 @@ export default function App() {
             <div className="success-icon">✓</div>
             <h3>Vagas a caminho!</h3>
             <p>Enviamos as mais relevantes para <strong>{form.email}</strong>.</p>
+            <button className="btn" style={{marginTop: "1.5rem"}} onClick={() => setSuccess(false)}>
+              Buscar novamente →
+            </button>
           </div>
         )}
       </div>
