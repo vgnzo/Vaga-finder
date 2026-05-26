@@ -63,14 +63,17 @@ export default function App() {
         { headers: { "Accept-Language": "pt-BR" } }
       );
       const data = await res.json();
-      const toTitleCase = (str) => str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+      const stateMap = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
+      const smallWords = ["de","da","do","das","dos","e"];
+      const toTitleCase = (str) => str.toLowerCase().split(" ").map((w,i) => i>0 && smallWords.includes(w) ? w : w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
       const cities = data
-        .filter((r) => ["city", "town", "village", "municipality"].includes(r.addresstype) || r.type === "administrative")
+        .filter((r) => r.address && (r.address.city || r.address.town || r.address.village))
         .map((r) => {
           const city = toTitleCase(r.address.city || r.address.town || r.address.village || r.name);
-          const state = toTitleCase(r.address.state || "");
-          const stateCode = r.address["ISO3166-2-lvl4"]?.split("-")[1] || state;
-          if (city.toLowerCase() === state.toLowerCase()) return null;
+          const stateFull = r.address.state || "";
+          const stateCode = stateMap[stateFull] || r.address["ISO3166-2-lvl4"]?.split("-")[1] || stateFull;
+          if (!city || !stateCode) return null;
+          if (city.toLowerCase() === stateFull.toLowerCase()) return null;
           return `${city}, ${stateCode}`;
         })
         .filter(Boolean)
@@ -117,7 +120,7 @@ export default function App() {
       await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, nome: nome.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()), localizacao: locSelected, stack: selectedStacks.join(", ") }),
+        body: JSON.stringify({ ...form, nome: nome.toLowerCase().split(" ").map((w,i) => i>0 && ["de","da","do","das","dos","e"].includes(w) ? w : w.charAt(0).toUpperCase()+w.slice(1)).join(" "), localizacao: locSelected, stack: selectedStacks.join(", ") }),
       });
     } catch (e) {}
     setLoading(false);
