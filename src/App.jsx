@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import "./styles.css";
 
 const WEBHOOK_URL = "https://igcjr.app.n8n.cloud/webhook/e92117d7-05f2-4402-8808-7e261c25aca4";
@@ -23,14 +23,23 @@ const STACKS = [
 ];
 
 export default function App() {
-  const [form, setForm] = useState({ nome: "", email: "", nivel: "", localizacao: "" });
+  const [form, setForm] = useState({ nome: "", email: "", nivel: "" });
   const [selectedStacks, setSelectedStacks] = useState([]);
   const [stackSearch, setStackSearch] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showStackDropdown, setShowStackDropdown] = useState(false);
+
+  const [locSearch, setLocSearch] = useState("");
+  const [locResults, setLocResults] = useState([]);
+  const [locSelected, setLocSelected] = useState("");
+  const [showLocDropdown, setShowLocDropdown] = useState(false);
+  const [locLoading, setLocLoading] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);
-  const dropdownRef = useRef(null);
+
+  const stackRef = useRef(null);
+  const locRef = useRef(null);
 
   const filteredStacks = STACKS.filter(
     (s) => s.toLowerCase().includes(stackSearch.toLowerCase()) && !selectedStacks.includes(s)
@@ -38,13 +47,41 @@ export default function App() {
 
   useEffect(() => {
     const handleClick = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowDropdown(false);
-      }
+      if (stackRef.current && !stackRef.current.contains(e.target)) setShowStackDropdown(false);
+      if (locRef.current && !locRef.current.contains(e.target)) setShowLocDropdown(false);
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  const searchLocation = useCallback(async (query) => {
+    if (query.length < 2) { setLocResults([]); return; }
+    setLocLoading(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=br&format=json&addressdetails=1&limit=6`,
+        { headers: { "Accept-Language": "pt-BR" } }
+      );
+      const data = await res.json();
+      const cities = data
+        .filter((r) => ["city", "town", "village", "municipality"].includes(r.addresstype) || r.type === "administrative")
+        .map((r) => {
+          const city = r.address.city || r.address.town || r.address.village || r.name;
+          const state = r.address.state;
+          return `${city}, ${state}`;
+        })
+        .filter((v, i, a) => a.indexOf(v) === i);
+      setLocResults(cities.slice(0, 6));
+    } catch (e) {
+      setLocResults([]);
+    }
+    setLocLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => searchLocation(locSearch), 400);
+    return () => clearTimeout(timer);
+  }, [locSearch, searchLocation]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.id]: e.target.value });
@@ -54,16 +91,20 @@ export default function App() {
   const addStack = (stack) => {
     setSelectedStacks([...selectedStacks, stack]);
     setStackSearch("");
-    setShowDropdown(false);
+    setShowStackDropdown(false);
   };
 
-  const removeStack = (stack) => {
-    setSelectedStacks(selectedStacks.filter((s) => s !== stack));
+  const removeStack = (stack) => setSelectedStacks(selectedStacks.filter((s) => s !== stack));
+
+  const selectLocation = (loc) => {
+    setLocSelected(loc);
+    setLocSearch(loc);
+    setShowLocDropdown(false);
   };
 
   const handleSubmit = async () => {
-    const { nome, email, nivel, localizacao } = form;
-    if (!nome || !email || !nivel || !localizacao || selectedStacks.length === 0) {
+    const { nome, email, nivel } = form;
+    if (!nome || !email || !nivel || !locSelected || selectedStacks.length === 0) {
       setError(true);
       return;
     }
@@ -72,7 +113,7 @@ export default function App() {
       await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, stack: selectedStacks.join(", ") }),
+        body: JSON.stringify({ ...form, localizacao: locSelected, stack: selectedStacks.join(", ") }),
       });
     } catch (e) {}
     setLoading(false);
@@ -109,19 +150,42 @@ export default function App() {
                   <option value="Desenvolvedor senior com mais de 5 anos">Sênior</option>
                 </select>
               </div>
+
+              {/* Localização com autocomplete */}
               <div className="field">
-                <label htmlFor="localizacao">Localização</label>
-                <input id="localizacao" type="text" placeholder="São Paulo, SP" value={form.localizacao} onChange={handleChange} />
+                <label>Localização</label>
+                <div className="stack-wrapper" ref={locRef}>
+                  <input
+                    type="text"
+                    className="stack-input"
+                    placeholder="Digite sua cidade..."
+                    value={locSearch}
+                    onChange={(e) => { setLocSearch(e.target.value); setLocSelected(""); setShowLocDropdown(true); }}
+                    onFocus={() => setShowLocDropdown(true)}
+                  />
+                  {showLocDropdown && (locLoading || locResults.length > 0) && (
+                    <div className="stack-dropdown">
+                      {locLoading ? (
+                        <div className="stack-option" style={{color:"#555"}}>Buscando...</div>
+                      ) : (
+                        locResults.map((loc) => (
+                          <div key={loc} className="stack-option" onClick={() => selectLocation(loc)}>{loc}</div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Stack com tags */}
               <div className="field full">
                 <label>Stack Principal</label>
-                <div className="stack-wrapper" ref={dropdownRef}>
+                <div className="stack-wrapper" ref={stackRef}>
                   {selectedStacks.length > 0 && (
                     <div className="stack-tags">
                       {selectedStacks.map((s) => (
                         <span key={s} className="stack-tag">
-                          {s}
-                          <button onClick={() => removeStack(s)}>×</button>
+                          {s}<button onClick={() => removeStack(s)}>×</button>
                         </span>
                       ))}
                     </div>
@@ -131,21 +195,20 @@ export default function App() {
                     className="stack-input"
                     placeholder={selectedStacks.length === 0 ? "Busque e selecione suas tecnologias..." : "Adicionar mais..."}
                     value={stackSearch}
-                    onChange={(e) => { setStackSearch(e.target.value); setShowDropdown(true); }}
-                    onFocus={() => setShowDropdown(true)}
+                    onChange={(e) => { setStackSearch(e.target.value); setShowStackDropdown(true); }}
+                    onFocus={() => setShowStackDropdown(true)}
                   />
-                  {showDropdown && filteredStacks.length > 0 && (
+                  {showStackDropdown && filteredStacks.length > 0 && (
                     <div className="stack-dropdown">
                       {filteredStacks.slice(0, 8).map((s) => (
-                        <div key={s} className="stack-option" onClick={() => addStack(s)}>
-                          {s}
-                        </div>
+                        <div key={s} className="stack-option" onClick={() => addStack(s)}>{s}</div>
                       ))}
                     </div>
                   )}
                 </div>
               </div>
             </div>
+
             <button className="btn" onClick={handleSubmit} disabled={loading}>
               {loading ? "Analisando..." : "Buscar vagas relevantes →"}
             </button>
@@ -157,7 +220,7 @@ export default function App() {
             <div className="success-icon">✓</div>
             <h3>Vagas a caminho!</h3>
             <p>Enviamos as mais relevantes para <strong>{form.email}</strong>.</p>
-            <button className="btn" style={{marginTop: "1.5rem"}} onClick={() => { setSuccess(false); setSelectedStacks([]); setForm({ nome: "", email: "", nivel: "", localizacao: "" }); }}>
+            <button className="btn" style={{marginTop: "1.5rem"}} onClick={() => { setSuccess(false); setSelectedStacks([]); setLocSelected(""); setLocSearch(""); setForm({ nome: "", email: "", nivel: "" }); }}>
               Buscar novamente →
             </button>
           </div>
