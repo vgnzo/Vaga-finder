@@ -258,8 +258,7 @@ export default function Recrutador({ voltar }) {
               {loading ? "Analisando candidatos..." : "Buscar candidatos →"}
             </button>
             {error && <p className="err">Preencha todos os campos e selecione ao menos uma tecnologia.</p>}
-            <p className="trocar-pagina" onClick={voltar}>← Sou candidato</p>
-          </div>
+<p className="trocar-pagina" onClick={voltar}>← Voltar</p>          </div>
         ) : semResultados ? (
           <div className="success">
             <div className="success-icon">✗</div>

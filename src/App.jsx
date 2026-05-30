@@ -187,9 +187,9 @@ export default function App() {
   return <Landing irPara={(p) => setPagina(p)} />;
 }
 
-  if (pagina === "recrutador") {
-  return <Recrutador voltar={() => setPagina("candidato")} />;
-} 
+ if (pagina === "recrutador") {
+  return <Recrutador voltar={() => setPagina("landing")} />;
+}
 
   return (
     <div className="w">
@@ -281,7 +281,7 @@ export default function App() {
             </button>
             {error && <p className="err">Preencha todos os campos e selecione ao menos uma tecnologia.</p>}
             <p className="footer">Powered by n8n + OpenAI · Vagas atualizadas diariamente</p>
-
+                  <p className="trocar-pagina" onClick={() => setPagina("landing")}>← Voltar</p>
           </div>
         ) : (
           <div className="success">
@@ -291,6 +291,7 @@ export default function App() {
             <button className="btn" style={{marginTop: "1.5rem"}} onClick={() => { setSuccess(false); setSelectedStacks([]); setLocSelected(""); setLocSearch(""); setForm({ nome: "", email: "", nivel: "" }); }}>
               Buscar novamente →
             </button>
+            <p className="trocar-pagina" onClick={() => setPagina("landing")}>← Voltar ao início</p>
           </div>
         )}
       </div>
