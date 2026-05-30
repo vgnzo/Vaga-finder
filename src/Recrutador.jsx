@@ -1,10 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import "./styles.css";
-import Recrutador from "./Recrutador";
 
-const [pagina, setPagina] = useState("candidato");
+const WEBHOOK_URL = "https://igcjr.app.n8n.cloud/webhook/f81f6aa5-edc2-4fde-9fad-034fa8740f2a";
 
-const WEBHOOK_URL = "https://igcjr.app.n8n.cloud/webhook/e92117d7-05f2-4402-8808-7e261c25aca4";
 const STACKS = [
   // Linguagens
   "Java", "JavaScript", "TypeScript", "Python", "Go", "Rust", "C", "C++", "C#", "Ruby", "PHP", "Kotlin", "Swift", "Dart", "Scala", "R", "MATLAB", "Perl", "Lua", "Elixir", "Haskell", "Clojure",
@@ -86,44 +83,32 @@ const STACKS = [
 const CIDADES = [
   "São Paulo, SP", "Campinas, SP", "Santos, SP", "São Bernardo do Campo, SP",
   "Santo André, SP", "Osasco, SP", "Ribeirão Preto, SP", "Sorocaba, SP",
-  "Mauá, SP", "São José dos Campos, SP", "Guarulhos, SP", "Mogi das Cruzes, SP",
-  "Rio de Janeiro, RJ", "Niterói, RJ", "Petrópolis, RJ", "Nova Iguaçu, RJ",
+  "Guarulhos, SP", "São José dos Campos, SP",
+  "Rio de Janeiro, RJ", "Niterói, RJ", "Nova Iguaçu, RJ",
   "Belo Horizonte, MG", "Uberlândia, MG", "Contagem, MG", "Juiz de Fora, MG",
-  "Curitiba, PR", "Londrina, PR", "Maringá, PR", "Ponta Grossa, PR",
-  "Porto Alegre, RS", "Caxias do Sul, RS", "Pelotas, RS", "Santa Maria, RS",
-  "Brasília, DF",
-  "Salvador, BA", "Feira de Santana, BA", "Vitória da Conquista, BA",
-  "Fortaleza, CE", "Caucaia, CE", "Juazeiro do Norte, CE",
-  "Manaus, AM", "Recife, PE", "Caruaru, PE", "Olinda, PE",
-  "Belém, PA", "Ananindeua, PA", "Santarém, PA",
-  "Goiânia, GO", "Aparecida de Goiânia, GO", "Anápolis, GO",
-  "São Luís, MA", "Imperatriz, MA",
-  "Maceió, AL", "Arapiraca, AL",
-  "Natal, RN", "Mossoró, RN",
-  "Teresina, PI", "Parnaíba, PI",
-  "João Pessoa, PB", "Campina Grande, PB",
-  "Aracaju, SE", "Feira Nova, SE",
-  "Macapá, AP", "Porto Velho, RO", "Rio Branco, AC",
+  "Curitiba, PR", "Londrina, PR", "Maringá, PR",
+  "Porto Alegre, RS", "Caxias do Sul, RS", "Pelotas, RS",
+  "Brasília, DF", "Salvador, BA", "Fortaleza, CE", "Manaus, AM",
+  "Recife, PE", "Belém, PA", "Goiânia, GO", "São Luís, MA",
+  "Maceió, AL", "Natal, RN", "Teresina, PI", "João Pessoa, PB",
+  "Aracaju, SE", "Macapá, AP", "Porto Velho, RO", "Rio Branco, AC",
   "Boa Vista, RR", "Palmas, TO", "Cuiabá, MT", "Campo Grande, MS",
-  "Vitória, ES", "Vila Velha, ES", "Serra, ES", "Cariacica, ES",
-  "Florianópolis, SC", "Joinville, SC", "Blumenau, SC",
+  "Vitória, ES", "Florianópolis, SC", "Joinville, SC", "Blumenau, SC",
   "Remoto"
 ];
 
-
-export default function App() {
-  const [form, setForm] = useState({ nome: "", email: "", nivel: "" });
+export default function Recrutador({ voltar }) {
+  const [form, setForm] = useState({ cargo: "", nivel: "" });
   const [selectedStacks, setSelectedStacks] = useState([]);
   const [stackSearch, setStackSearch] = useState("");
   const [showStackDropdown, setShowStackDropdown] = useState(false);
-
   const [locSearch, setLocSearch] = useState("");
   const [locSelected, setLocSelected] = useState("");
   const [showLocDropdown, setShowLocDropdown] = useState(false);
-
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);
+  const [candidatos, setCandidatos] = useState(null);
+  const [semResultados, setSemResultados] = useState(false);
 
   const stackRef = useRef(null);
   const locRef = useRef(null);
@@ -131,6 +116,10 @@ export default function App() {
   const filteredStacks = STACKS.filter(
     (s) => s.toLowerCase().includes(stackSearch.toLowerCase()) && !selectedStacks.includes(s)
   );
+
+  const filteredCidades = locSearch.length > 0
+    ? CIDADES.filter((c) => c.toLowerCase().includes(locSearch.toLowerCase())).slice(0, 8)
+    : [];
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -140,10 +129,6 @@ export default function App() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  const filteredCidades = locSearch.length > 0
-    ? CIDADES.filter((c) => c.toLowerCase().includes(locSearch.toLowerCase())).slice(0, 8)
-    : [];
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.id]: e.target.value });
@@ -165,67 +150,66 @@ export default function App() {
   };
 
   const handleSubmit = async () => {
-    const { nome, email, nivel } = form;
-    if (!nome || !email || !nivel || !locSelected || selectedStacks.length === 0) {
+    const { cargo, nivel } = form;
+    if (!cargo || !nivel || !locSelected || selectedStacks.length === 0) {
       setError(true);
       return;
     }
     setLoading(true);
+    setCandidatos(null);
+    setSemResultados(false);
     try {
-      await fetch(WEBHOOK_URL, {
+      const res = await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, nome: nome.toLowerCase().split(" ").map((w,i) => i>0 && ["de","da","do","das","dos","e"].includes(w) ? w : w.charAt(0).toUpperCase()+w.slice(1)).join(" "), localizacao: locSelected, stack: selectedStacks.join(", ") }),
+        body: JSON.stringify({ cargo, nivel, localizacao: locSelected, stack: selectedStacks.join(", ") }),
       });
-    } catch (e) {}
+      const data = await res.json();
+      if (data.mensagem) {
+        setSemResultados(true);
+      } else {
+        setCandidatos(Array.isArray(data) ? data : [data]);
+      }
+    } catch (e) {
+      setSemResultados(true);
+    }
     setLoading(false);
-    setSuccess(true);
   };
-
-
-  if (pagina === "recrutador") {
-  return <Recrutador voltar={() => setPagina("candidato")} />;
-} 
 
   return (
     <div className="w">
       <div className="grid-bg" />
       <div className="glow" />
       <div className="card">
-        <div className="badge"><span className="badge-dot" />Agente de vagas com IA</div>
-        <h1>Encontre vagas<br />feitas pra <span>você</span></h1>
-        <p className="desc">Preencha seu perfil e nossa IA analisa as vagas e envia só as relevantes pro seu email.</p>
+        <div className="badge"><span className="badge-dot" />Busca de candidatos com IA</div>
+        <h1>Encontre o candidato<br />ideal pra <span>sua vaga</span></h1>
+        <p className="desc">Preencha o perfil da vaga e nossa IA analisa os candidatos cadastrados e retorna os mais compatíveis.</p>
         <div className="divider" />
-        {!success ? (
+
+        {!candidatos && !semResultados ? (
           <div>
             <div className="grid2">
-              <div className="field">
-                <label htmlFor="nome">Nome</label>
-                <input id="nome" type="text" placeholder="Seu nome" value={form.nome} onChange={handleChange} />
-              </div>
-              <div className="field">
-                <label htmlFor="email">Email</label>
-                <input id="email" type="email" placeholder="seu@email.com" value={form.email} onChange={handleChange} />
+              <div className="field full">
+                <label htmlFor="cargo">Cargo</label>
+                <input id="cargo" type="text" placeholder="Ex: Desenvolvedor Java Junior" value={form.cargo} onChange={handleChange} />
               </div>
               <div className="field">
                 <label htmlFor="nivel">Nível</label>
                 <select id="nivel" value={form.nivel} onChange={handleChange} className={form.nivel ? "has-value" : ""}>
                   <option value="" disabled>Selecione</option>
-                  <option value="Estudante buscando primeiro estágio">Estágio</option>
-                  <option value="Desenvolvedor junior com até 2 anos">Junior</option>
-                  <option value="Desenvolvedor pleno com 2 a 5 anos">Pleno</option>
-                  <option value="Desenvolvedor senior com mais de 5 anos">Sênior</option>
+                  <option value="Estágio">Estágio</option>
+                  <option value="Junior">Junior</option>
+                  <option value="Pleno">Pleno</option>
+                  <option value="Sênior">Sênior</option>
                 </select>
               </div>
-
-              {/* Localização com autocomplete */}
               <div className="field">
                 <label>Localização</label>
                 <div className="stack-wrapper" ref={locRef}>
                   <input
                     type="text"
                     className="stack-input"
-                    placeholder="Digite sua cidade..."
+                    placeholder="Digite a cidade..."
                     value={locSearch}
                     onChange={(e) => { setLocSearch(e.target.value); setLocSelected(""); setShowLocDropdown(true); }}
                     onFocus={() => setShowLocDropdown(true)}
@@ -239,10 +223,8 @@ export default function App() {
                   )}
                 </div>
               </div>
-
-              {/* Stack com tags */}
               <div className="field full">
-                <label>Stack Principal</label>
+                <label>Stack Exigida</label>
                 <div className="stack-wrapper" ref={stackRef}>
                   {selectedStacks.length > 0 && (
                     <div className="stack-tags">
@@ -256,7 +238,7 @@ export default function App() {
                   <input
                     type="text"
                     className="stack-input"
-                    placeholder={selectedStacks.length === 0 ? "Busque e selecione suas tecnologias..." : "Adicionar mais..."}
+                    placeholder={selectedStacks.length === 0 ? "Busque e selecione tecnologias..." : "Adicionar mais..."}
                     value={stackSearch}
                     onChange={(e) => { setStackSearch(e.target.value); setShowStackDropdown(true); }}
                     onFocus={() => setShowStackDropdown(true)}
@@ -273,22 +255,41 @@ export default function App() {
             </div>
 
             <button className="btn" onClick={handleSubmit} disabled={loading}>
-              {loading ? "Analisando..." : "Buscar vagas relevantes →"}
+              {loading ? "Analisando candidatos..." : "Buscar candidatos →"}
             </button>
             {error && <p className="err">Preencha todos os campos e selecione ao menos uma tecnologia.</p>}
-            <p className="footer">Powered by n8n + OpenAI · Vagas atualizadas diariamente</p>
-            <p classname="trocar-pagina" onclick={() => setPagina("recrutador")}>
-              Sou recrutador →
-            </p>
+            <p className="trocar-pagina" onClick={voltar}>← Sou candidato</p>
           </div>
-        ) : (
+        ) : semResultados ? (
           <div className="success">
-            <div className="success-icon">✓</div>
-            <h3>Vagas a caminho!</h3>
-            <p>Enviamos as mais relevantes para <strong>{form.email}</strong>.</p>
-            <button className="btn" style={{marginTop: "1.5rem"}} onClick={() => { setSuccess(false); setSelectedStacks([]); setLocSelected(""); setLocSearch(""); setForm({ nome: "", email: "", nivel: "" }); }}>
+            <div className="success-icon">✗</div>
+            <h3>Nenhum candidato encontrado.</h3>
+            <p>Não há candidatos compatíveis com essa vaga no momento.</p>
+            <button className="btn" style={{marginTop: "1.5rem"}} onClick={() => { setSemResultados(false); setSelectedStacks([]); setLocSelected(""); setLocSearch(""); setForm({ cargo: "", nivel: "" }); }}>
               Buscar novamente →
             </button>
+          </div>
+        ) : (
+          <div>
+            <p style={{fontSize:"13px", color:"#635bff", marginBottom:"1rem"}}>
+              {candidatos.length} candidato{candidatos.length !== 1 ? "s" : ""} encontrado{candidatos.length !== 1 ? "s" : ""}
+            </p>
+            {candidatos.map((c, i) => (
+              <div key={i} className="candidato-card">
+                <div className="candidato-header">
+                  <div>
+                    <p className="candidato-nome">{c.nome}</p>
+                    <p className="candidato-email">{c.email}</p>
+                  </div>
+                  <div className="candidato-score">{c.score}<span>/10</span></div>
+                </div>
+                <p className="candidato-motivo">{c.motivo}</p>
+              </div>
+            ))}
+            <button className="btn" style={{marginTop:"1.5rem"}} onClick={() => { setCandidatos(null); setSelectedStacks([]); setLocSelected(""); setLocSearch(""); setForm({ cargo: "", nivel: "" }); }}>
+              Nova busca →
+            </button>
+            <p className="trocar-pagina" onClick={voltar}>← Sou candidato</p>
           </div>
         )}
       </div>
