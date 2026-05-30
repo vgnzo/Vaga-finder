@@ -361,3 +361,69 @@ h1 span { color: #635bff; }
   color: #666;
   line-height: 1.6;
 }
+
+.landing-card {
+  max-width: 540px;
+  width: 100%;
+  background: rgba(15,15,25,0.9);
+  border: 1px solid rgba(99,91,255,0.15);
+  border-radius: 20px;
+  padding: 2.5rem;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.landing-opcoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 1.5rem;
+}
+
+.landing-opcao {
+  background: rgba(99,91,255,0.05);
+  border: 1px solid rgba(99,91,255,0.15);
+  border-radius: 12px;
+  padding: 1.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.landing-opcao:hover {
+  background: rgba(99,91,255,0.12);
+  border-color: rgba(99,91,255,0.4);
+  transform: translateY(-2px);
+}
+
+.landing-opcao-icon {
+  font-size: 2rem;
+  margin-bottom: 4px;
+}
+
+.landing-opcao h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.landing-opcao p {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+}
+
+.landing-opcao-btn {
+  font-size: 12px;
+  color: #635bff;
+  margin-top: 4px;
+  font-weight: 500;
+}

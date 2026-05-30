@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import "./styles.css";
 import Recrutador from "./Recrutador";
+import Landing from "./Landing";
 
 
 const WEBHOOK_URL = "https://igcjr.app.n8n.cloud/webhook/e92117d7-05f2-4402-8808-7e261c25aca4";
@@ -111,7 +112,7 @@ const CIDADES = [
 
 
 export default function App() {
-  const [pagina, setPagina] = useState("candidato");
+  const [pagina, setPagina] = useState("landing");
   const [form, setForm] = useState({ nome: "", email: "", nivel: "" });
   const [selectedStacks, setSelectedStacks] = useState([]);
   const [stackSearch, setStackSearch] = useState("");
@@ -182,6 +183,9 @@ export default function App() {
     setSuccess(true);
   };
 
+  if (pagina === "landing") {
+  return <Landing irPara={(p) => setPagina(p)} />;
+}
 
   if (pagina === "recrutador") {
   return <Recrutador voltar={() => setPagina("candidato")} />;
@@ -277,8 +281,7 @@ export default function App() {
             </button>
             {error && <p className="err">Preencha todos os campos e selecione ao menos uma tecnologia.</p>}
             <p className="footer">Powered by n8n + OpenAI · Vagas atualizadas diariamente</p>
-<p className="trocar-pagina" onClick={() => setPagina("recrutador")}>              Sou recrutador →
-            </p>
+
           </div>
         ) : (
           <div className="success">
