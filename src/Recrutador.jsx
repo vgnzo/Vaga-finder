@@ -267,6 +267,7 @@ export default function Recrutador({ voltar }) {
             <button className="btn" style={{marginTop: "1.5rem"}} onClick={() => { setSemResultados(false); setSelectedStacks([]); setLocSelected(""); setLocSearch(""); setForm({ cargo: "", nivel: "" }); }}>
               Buscar novamente →
             </button>
+            <p className="trocar-pagina" onClick={voltar}>← Voltar ao início</p>
           </div>
         ) : (
           <div>
@@ -288,6 +289,7 @@ export default function Recrutador({ voltar }) {
             <button className="btn" style={{marginTop:"1.5rem"}} onClick={() => { setCandidatos(null); setSelectedStacks([]); setLocSelected(""); setLocSearch(""); setForm({ cargo: "", nivel: "" }); }}>
               Nova busca →
             </button>
+            <p className="trocar-pagina" onClick={voltar}>← Voltar ao início</p>
           </div>
         )}
       </div>
